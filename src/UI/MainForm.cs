@@ -1,0 +1,30 @@
+using System;
+using System.Windows.Forms;
+
+namespace Minimarket.UI
+{
+    public class MainForm : Form
+    {
+        private MenuStrip menu = new MenuStrip();
+        public MainForm()
+        {
+            Text = "Minimarket - Sistema de Gestión";
+            Width = 1000;
+            Height = 700;
+
+            var mArchivo = new ToolStripMenuItem("Archivo");
+            var mSalir = new ToolStripMenuItem("Salir", null, (s,e)=> Close());
+            mArchivo.DropDownItems.Add(mSalir);
+
+            var mGestion = new ToolStripMenuItem("Gestión");
+            var mProductos = new ToolStripMenuItem("Productos", null, (s,e)=> new ProductsForm().ShowDialog());
+            var mVentas = new ToolStripMenuItem("Ventas", null, (s,e)=> new SalesForm().ShowDialog());
+            var mReportes = new ToolStripMenuItem("Reportes", null, (s,e)=> new ReportsForm().ShowDialog());
+            mGestion.DropDownItems.AddRange(new ToolStripItem[]{ mProductos, mVentas, mReportes });
+
+            menu.Items.AddRange(new ToolStripItem[]{ mArchivo, mGestion });
+            MainMenuStrip = menu;
+            Controls.Add(menu);
+        }
+    }
+}
