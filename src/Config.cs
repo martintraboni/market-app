@@ -8,6 +8,6 @@ namespace Minimarket
         // Opción 2: SQL Server Express
         // public static string ConnectionString = @"Server=.\SQLEXPRESS;Database=MinimarketDB;Trusted_Connection=True;TrustServerCertificate=True;";
         // Opción 3: Servidor local
-        public static string ConnectionString = @"Server=localhost;Database=MinimarketDB;Trusted_Connection=True;TrustServerCertificate=True;";
+        public static string ConnectionString = "Server=localhost,1433;Database=MinimarketDB;Trusted_Connection=True;TrustServerCertificate=True;";
     }
 }

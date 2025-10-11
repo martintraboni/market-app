@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Minimarket.Models;
 
 namespace Minimarket.Data
@@ -10,39 +7,27 @@ namespace Minimarket.Data
     {
         public static int CrearVenta(Sale v)
         {
-            using var cn = Db.GetConnection();
-            cn.Open();
-            using var tx = cn.BeginTransaction();
+            using var db = new MinimarketContext();
+            using var tx = db.Database.BeginTransaction();
             try
             {
-                var cmdVenta = new SqlCommand(
-                    "INSERT INTO Ventas (Fecha, Total, MedioPago) OUTPUT INSERTED.IDVenta VALUES (@Fecha, @Total, @MedioPago)",
-                    cn, tx);
-                cmdVenta.Parameters.AddWithValue("@Fecha", v.Fecha);
-                cmdVenta.Parameters.AddWithValue("@Total", v.Total);
-                cmdVenta.Parameters.AddWithValue("@MedioPago", v.MedioPago);
-                int idVenta = (int)cmdVenta.ExecuteScalar();
+                // Agregar la venta y sus ítems
+                db.Ventas.Add(v);
+                db.SaveChanges();
 
+                // Actualizar stock de cada producto vendido
                 foreach (var it in v.Items)
                 {
-                    var cmdDet = new SqlCommand(
-                        @"INSERT INTO DetalleVentas (IDVenta, IDProducto, Cantidad, PrecioUnitario)
-                          VALUES (@IDVenta, @IDProducto, @Cantidad, @PrecioUnitario)", cn, tx);
-                    cmdDet.Parameters.AddWithValue("@IDVenta", idVenta);
-                    cmdDet.Parameters.AddWithValue("@IDProducto", it.IDProducto);
-                    cmdDet.Parameters.AddWithValue("@Cantidad", it.Cantidad);
-                    cmdDet.Parameters.AddWithValue("@PrecioUnitario", it.PrecioUnitario);
-                    cmdDet.ExecuteNonQuery();
-
-                    var cmdStock = new SqlCommand(
-                        "UPDATE Productos SET Stock = Stock - @cant WHERE IDProducto=@id", cn, tx);
-                    cmdStock.Parameters.AddWithValue("@cant", it.Cantidad);
-                    cmdStock.Parameters.AddWithValue("@id", it.IDProducto);
-                    cmdStock.ExecuteNonQuery();
+                    var producto = db.Productos.FirstOrDefault(p => p.Id == it.Id);
+                    if (producto != null)
+                    {
+                        producto.Stock -= it.Cantidad;
+                    }
                 }
+                db.SaveChanges();
 
                 tx.Commit();
-                return idVenta;
+                return v.Id;
             }
             catch
             {
@@ -51,15 +36,14 @@ namespace Minimarket.Data
             }
         }
 
-        public static DataTable ReporteVentasPorFecha(DateTime desde, DateTime hasta)
+        public static List<Sale> ReporteVentasPorFecha(DateTime desde, DateTime hasta)
         {
-            string sql = @"SELECT v.IDVenta, v.Fecha, v.Total, v.MedioPago
-                           FROM Ventas v
-                           WHERE v.Fecha BETWEEN @d1 AND @d2
-                           ORDER BY v.Fecha DESC";
-            return Db.Query(sql,
-                new SqlParameter("@d1", desde),
-                new SqlParameter("@d2", hasta));
+            using var db = new MinimarketContext();
+            return db.Ventas
+                .Where(v => v.Fecha >= desde && v.Fecha <= hasta)
+                .OrderByDescending(v => v.Fecha)
+                .Include(v => v.Items)
+                .ToList();
         }
     }
 }

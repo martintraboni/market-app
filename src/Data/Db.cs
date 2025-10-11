@@ -1,45 +1,19 @@
-using System.Data;
-using System.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using Minimarket;
+using Minimarket.Models;
 
-namespace Minimarket.Data
+public class MinimarketContext : DbContext
 {
-    public static class Db
+    public DbSet<Product> Productos { get; set; }
+    public DbSet<User> Usuarios { get; set; }
+    public DbSet<Sale> Ventas { get; set; }
+    public DbSet<SaleItem> Items { get; set; }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder options)
+        => options.UseSqlServer(Config.ConnectionString);
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        public static SqlConnection GetConnection()
-        {
-            return new SqlConnection(Config.ConnectionString);
-        }
 
-        public static DataTable Query(string sql, params SqlParameter[] parameters)
-        {
-            using var cn = GetConnection();
-            using var cmd = new SqlCommand(sql, cn);
-            if (parameters != null)
-                cmd.Parameters.AddRange(parameters);
-            using var da = new SqlDataAdapter(cmd);
-            var dt = new DataTable();
-            da.Fill(dt);
-            return dt;
-        }
-
-        public static int Execute(string sql, params SqlParameter[] parameters)
-        {
-            using var cn = GetConnection();
-            using var cmd = new SqlCommand(sql, cn);
-            if (parameters != null)
-                cmd.Parameters.AddRange(parameters);
-            cn.Open();
-            return cmd.ExecuteNonQuery();
-        }
-
-        public static object? Scalar(string sql, params SqlParameter[] parameters)
-        {
-            using var cn = GetConnection();
-            using var cmd = new SqlCommand(sql, cn);
-            if (parameters != null)
-                cmd.Parameters.AddRange(parameters);
-            cn.Open();
-            return cmd.ExecuteScalar();
-        }
     }
 }

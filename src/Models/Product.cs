@@ -2,7 +2,7 @@ namespace Minimarket.Models
 {
     public class Product
     {
-        public int IDProducto { get; set; }
+        public int Id { get; set; }
         public string Codigo { get; set; } = "";
         public string Descripcion { get; set; } = "";
         public string Categoria { get; set; } = "";

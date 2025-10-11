@@ -9,6 +9,7 @@ IF OBJECT_ID('dbo.DetalleVentas', 'U') IS NOT NULL DROP TABLE dbo.DetalleVentas;
 IF OBJECT_ID('dbo.Ventas', 'U') IS NOT NULL DROP TABLE dbo.Ventas;
 IF OBJECT_ID('dbo.Productos', 'U') IS NOT NULL DROP TABLE dbo.Productos;
 IF OBJECT_ID('dbo.Caja', 'U') IS NOT NULL DROP TABLE dbo.Caja;
+IF OBJECT_ID('dbo.Usuarios', 'U') IS NOT NULL DROP TABLE dbo.Usuarios;
 
 CREATE TABLE Productos (
     IDProducto INT IDENTITY PRIMARY KEY,
@@ -44,8 +45,20 @@ CREATE TABLE Caja (
     Descripcion NVARCHAR(150)
 );
 
+
+CREATE TABLE Usuarios (
+    IDUsuario INT IDENTITY PRIMARY KEY,
+    Username NVARCHAR(50) NOT NULL UNIQUE,
+    Password NVARCHAR(100) NOT NULL,
+    Nombre NVARCHAR(100) NOT NULL,
+    Rol NVARCHAR(50) NOT NULL DEFAULT('Usuario')
+);
+
 -- Datos de ejemplo
 INSERT INTO Productos (Codigo, Descripcion, Categoria, Precio, Stock, StockMin) VALUES
 ('0001','Gaseosa Cola 2L','Bebidas',2500,100,10),
 ('0002','Yerba Mate 1Kg','Alimentos',4200,40,5),
 ('0003','Lavandina 1L','Limpieza',1800,60,8);
+
+-- Usuario de prueba: admin / admin123
+INSERT INTO Usuarios (Username, Password, Nombre, Rol) VALUES ('admin', 'admin123', 'Administrador', 'Admin');

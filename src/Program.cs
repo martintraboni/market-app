@@ -1,6 +1,3 @@
-using System;
-using System.Windows.Forms;
-
 namespace Minimarket
 {
     internal static class Program
@@ -9,7 +6,11 @@ namespace Minimarket
         static void Main()
         {
             ApplicationConfiguration.Initialize();
-            Application.Run(new UI.MainForm());
+            using var login = new UI.LoginForm();
+            if (login.ShowDialog() == DialogResult.OK && login.UsuarioLogueado != null)
+            {
+                Application.Run(new UI.MainForm(login.UsuarioLogueado));
+            }
         }
     }
 }
