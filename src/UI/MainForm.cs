@@ -6,7 +6,7 @@ namespace Minimarket.UI
         private Label lblUsuario = new Label { Left = 200, Top = 5, AutoSize = true };
         public MainForm(Models.User usuario)
         {
-            Text = $"Minimarket - Sistema de Gestión | Usuario: {usuario.Nombre}";
+            Text = $"Minimarket - Sistema de Gestión | Usuario: {usuario.FullName}";
             Width = 1000;
             Height = 700;
 
@@ -24,7 +24,7 @@ namespace Minimarket.UI
             MainMenuStrip = menu;
             Controls.Add(menu);
 
-            lblUsuario.Text = $"Bienvenido, {usuario.Nombre} ({usuario.Rol})";
+            lblUsuario.Text = $"Bienvenido, {usuario.FullName} ({usuario.Role})";
             lblUsuario.Top = menu.Height + 5;
             lblUsuario.Left = Width - 250;
             Controls.Add(lblUsuario);

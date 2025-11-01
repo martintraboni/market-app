@@ -1,6 +1,6 @@
 using Minimarket.Data;
-using Minimarket.Models;
 using Minimarket.Exceptions;
+using Models;
 
 namespace Minimarket.UI
 {
@@ -10,9 +10,11 @@ namespace Minimarket.UI
         private TextBox txtPass = new TextBox { PlaceholderText = "Contraseña", UseSystemPasswordChar = true };
         private Button btnLogin = new Button { Text = "Ingresar" };
         public User? UsuarioLogueado { get; private set; }
-
-        public LoginForm()
+        private readonly UserRepository _userRepository;
+        public LoginForm(UserRepository userRepository)
         {
+            _userRepository = userRepository;
+
             Text = "Login";
             Width = 300;
             Height = 180;
@@ -25,11 +27,15 @@ namespace Minimarket.UI
             Controls.AddRange(new Control[] { lblUser, txtUser, lblPass, txtPass, btnLogin });
         }
 
+        public LoginForm()
+        {
+        }
+
         private void BtnLogin_Click(object? sender, EventArgs e)
         {
             try
             {
-                var user = UserRepository.Login(txtUser.Text, txtPass.Text);
+                var user = _userRepository.Login(txtUser.Text, txtPass.Text);
                 UsuarioLogueado = user;
                 DialogResult = DialogResult.OK;
                 Close();

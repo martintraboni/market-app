@@ -1,12 +1,17 @@
-namespace Minimarket.Models
+
+namespace Models
 {
     public class Sale
     {
         public int Id { get; set; }
-        public DateTime Fecha { get; set; } = DateTime.Now;
+        public DateTime DateTime { get; set; }
+        public int UserId { get; set; }
+        public string PaymentMethod { get; set; } = string.Empty;
         public decimal Total { get; set; }
-        public string MedioPago { get; set; } = "Efectivo";
-        public List<SaleItem> Items { get; set; } = new();
-    }
 
+        // Relaciones de navegación
+        public User User { get; set; }
+        public ICollection<SaleItem> SaleItems { get; set; }
+        public ICollection<CashMovement> CashMovements { get; set; }
+    }
 }

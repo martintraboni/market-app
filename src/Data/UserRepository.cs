@@ -1,11 +1,23 @@
 using Minimarket.Exceptions;
-using Minimarket.Models;
+using Models;
 
 namespace Minimarket.Data
 {
-    public static class UserRepository
+    public class UserRepository
     {
-        public static User Login(string username, string password)
+        private readonly Db _db;
+
+        public UserRepository(Db db)
+        {
+            _db = db ?? throw new ArgumentNullException(nameof(db));
+        }
+
+        public User? GetUserById(int id)
+        {
+            return _db.Users.FirstOrDefault(u => u.Id == id);
+        }
+
+        public User Login(string username, string password)
         {
             using var db = new MinimarketContext();
             var user = db.Usuarios.FirstOrDefault(u => u.Username == username);
@@ -19,21 +31,21 @@ namespace Minimarket.Data
             return user;
         }
 
-        public static void Create(string username, string password, string role)
+        public void Create(string username, string password, string role)
         {
             using var db = new MinimarketContext();
             var user = new User
             {
                 Username = username,
                 Password = password,
-                Rol = role,
-                Nombre = "" // Puedes ajustar esto si tienes el nombre disponible
+                Role = role,
+                FullName = ""
             };
             db.Usuarios.Add(user);
             db.SaveChanges();
         }
 
-        public static void Edit(User updatedUser)
+        public void Edit(User updatedUser)
         {
             using var db = new MinimarketContext();
             var user = db.Usuarios.FirstOrDefault(u => u.Id == updatedUser.Id);
@@ -41,13 +53,13 @@ namespace Minimarket.Data
             {
                 user.Username = updatedUser.Username;
                 user.Password = updatedUser.Password;
-                user.Nombre = updatedUser.Nombre;
-                user.Rol = updatedUser.Rol;
+                user.FullName = updatedUser.FullName;
+                user.Role = updatedUser.Role;
                 db.SaveChanges();
             }
         }
 
-        public static void Delete(int idUsuario)
+        public void Delete(int idUsuario)
         {
             using var db = new MinimarketContext();
             var user = db.Usuarios.FirstOrDefault(u => u.Id == idUsuario);

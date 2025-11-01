@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Minimarket.Models;
+using Models;
 
 namespace Minimarket.Data
 {
@@ -16,12 +16,12 @@ namespace Minimarket.Data
                 db.SaveChanges();
 
                 // Actualizar stock de cada producto vendido
-                foreach (var it in v.Items)
+                foreach (var it in v.SaleItems)
                 {
-                    var producto = db.Productos.FirstOrDefault(p => p.Id == it.Id);
+                    var producto = db.Productos.FirstOrDefault(p => p.Id == it.ProductId);
                     if (producto != null)
                     {
-                        producto.Stock -= it.Cantidad;
+                        producto.Stock -= it.Qty;
                     }
                 }
                 db.SaveChanges();
@@ -40,9 +40,9 @@ namespace Minimarket.Data
         {
             using var db = new MinimarketContext();
             return db.Ventas
-                .Where(v => v.Fecha >= desde && v.Fecha <= hasta)
-                .OrderByDescending(v => v.Fecha)
-                .Include(v => v.Items)
+                .Where(v => v.DateTime >= desde && v.DateTime <= hasta)
+                .OrderByDescending(v => v.DateTime)
+                .Include(v => v.SaleItems)
                 .ToList();
         }
     }

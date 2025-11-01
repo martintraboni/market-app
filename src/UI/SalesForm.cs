@@ -1,5 +1,5 @@
 using Minimarket.Data;
-using Minimarket.Models;
+using Models;
 
 namespace Minimarket.UI
 {
@@ -41,10 +41,10 @@ namespace Minimarket.UI
         {
             bs.DataSource = carrito.Select(x => new
             {
-                x.Codigo,
+                x.Code,
                 x.Descripcion,
-                x.Cantidad,
-                x.PrecioUnitario,
+                x.Qty,
+                x.UnitPrice,
                 Subtotal = x.Subtotal
             }).ToList();
             lblTotal.Text = $"Total: ${carrito.Sum(x => x.Subtotal):0.00}";
@@ -59,21 +59,21 @@ namespace Minimarket.UI
             int cant = (int)nudCantidad.Value;
             if (p.Stock < cant) { MessageBox.Show("Stock insuficiente"); return; }
 
-            var existente = carrito.FirstOrDefault(i => i.Id == p.Id);
+            var existente = carrito.FirstOrDefault(i => i.ProductId == p.Id);
             if (existente == null)
             {
                 carrito.Add(new SaleItem
                 {
-                    Id = p.Id,
-                    Codigo = p.Codigo,
-                    Descripcion = p.Descripcion,
-                    Cantidad = cant,
-                    PrecioUnitario = p.Precio
+                    Descripcion = p.Name,
+                    Code = p.Code,
+                    ProductId = p.Id,
+                    Qty = cant,
+                    UnitPrice = p.Price
                 });
             }
             else
             {
-                existente.Cantidad += cant;
+                existente.Qty += cant;
             }
             CargarGrid();
             txtCodigo.Clear();
@@ -85,10 +85,10 @@ namespace Minimarket.UI
             if (carrito.Count == 0) { MessageBox.Show("No hay items en el carrito"); return; }
             var venta = new Sale
             {
-                Fecha = DateTime.Now,
-                MedioPago = cboPago.SelectedItem!.ToString()!,
+                DateTime = DateTime.Now,
+                PaymentMethod = cboPago.SelectedItem!.ToString()!,
                 Total = carrito.Sum(x => x.Subtotal),
-                Items = carrito
+                SaleItems = carrito
             };
             try
             {

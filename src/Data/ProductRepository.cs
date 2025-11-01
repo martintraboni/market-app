@@ -1,4 +1,4 @@
-using Minimarket.Models;
+using Models;
 
 namespace Minimarket.Data
 {
@@ -10,14 +10,14 @@ namespace Minimarket.Data
             return string.IsNullOrEmpty(filtro)
                 ? db.Productos.ToList()
                 : db.Productos
-                    .Where(p => p.Codigo.Contains(filtro) || p.Descripcion.Contains(filtro))
+                    .Where(p => p.Code.Contains(filtro) || p.Name.Contains(filtro))
                     .ToList();
         }
 
         public static Product? GetByCodigo(string codigo)
         {
             using var db = new MinimarketContext();
-            return db.Productos.FirstOrDefault(p => p.Codigo == codigo);
+            return db.Productos.FirstOrDefault(p => p.Code == codigo);
         }
 
         public static void Insert(Product p)
@@ -30,14 +30,14 @@ namespace Minimarket.Data
         public static void Update(Product p)
         {
             using var db = new MinimarketContext();
-            var existing = db.Productos.FirstOrDefault(x => x.Codigo == p.Codigo);
+            var existing = db.Productos.FirstOrDefault(x => x.Code == p.Code);
             if (existing != null)
             {
-                existing.Descripcion = p.Descripcion;
-                existing.Categoria = p.Categoria;
-                existing.Precio = p.Precio;
+                existing.Name = p.Name;
+                existing.CategoryId = p.CategoryId;
+                existing.Price = p.Price;
                 existing.Stock = p.Stock;
-                existing.StockMin = p.StockMin;
+                existing.MinStock = p.MinStock;
                 db.SaveChanges();
             }
         }
@@ -45,7 +45,7 @@ namespace Minimarket.Data
         public static void DeleteByCodigo(string codigo)
         {
             using var db = new MinimarketContext();
-            var producto = db.Productos.FirstOrDefault(p => p.Codigo == codigo);
+            var producto = db.Productos.FirstOrDefault(p => p.Code == codigo);
             if (producto != null)
             {
                 db.Productos.Remove(producto);
