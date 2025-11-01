@@ -10,7 +10,7 @@ namespace Minimarket.UI
         private Button btnBuscar = new Button { Text = "Buscar" };
         private Button btnAgregar = new Button { Text = "Agregar" };
         private Button btnEditar = new Button { Text = "Editar" };
-        private Button btnEliminar = new Button { Text = "Eliminar" };
+        private Button btnInhabilitar = new Button { Text = "Activar/Desactivar" };
 
         public ProductsForm()
         {
@@ -18,7 +18,7 @@ namespace Minimarket.UI
             Width = 900; Height = 600;
 
             var top = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true };
-            top.Controls.AddRange(new Control[] { txtFiltro, btnBuscar, btnAgregar, btnEditar, btnEliminar });
+            top.Controls.AddRange(new Control[] { txtFiltro, btnBuscar, btnAgregar, btnEditar, btnInhabilitar });
 
             Controls.Add(grid);
             Controls.Add(top);
@@ -29,16 +29,21 @@ namespace Minimarket.UI
             btnEditar.Click += (s, e) =>
             {
                 if (grid.CurrentRow == null) return;
-                var p = (Product)grid.CurrentRow.DataBoundItem;
+                var dto = grid.CurrentRow.DataBoundItem as Minimarket.DTOs.ProductListDto;
+                if (dto == null) return;
+                var p = ProductRepository.GetByCodigo(dto.Code);
+                if (p == null) return;
                 Editar(p, false);
             };
-            btnEliminar.Click += (s, e) =>
+            btnInhabilitar.AutoSize = true;
+            btnInhabilitar.Click += (s, e) =>
             {
                 if (grid.CurrentRow == null) return;
-                var p = (Product)grid.CurrentRow.DataBoundItem;
-                if (MessageBox.Show($"¿Eliminar {p.Name}?", "Confirmar", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                var dto = grid.CurrentRow.DataBoundItem as Minimarket.DTOs.ProductListDto;
+                if (dto == null) return;
+                if (MessageBox.Show($"¿Desea cambiar el estado de {dto.Name}?", "Confirmar", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
-                    ProductRepository.DeleteByCodigo(p.Code);
+                    ProductRepository.ChangeActiveStatus(dto.Code);
                     Cargar(txtFiltro.Text);
                 }
             };
@@ -46,7 +51,7 @@ namespace Minimarket.UI
 
         private void Cargar(string filtro = "")
         {
-            var list = ProductRepository.GetAll(filtro);
+            var list = ProductRepository.GetAllDto(filtro);
             grid.DataSource = list;
         }
 

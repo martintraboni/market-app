@@ -4,15 +4,42 @@ namespace Minimarket.Data
 {
     public static class ProductRepository
     {
-        public static List<Product> GetAll(string filtro = "")
+        public static List<Minimarket.DTOs.ProductListDto> GetAllDto(string filtro = "")
         {
             using var db = new MinimarketContext();
-            return string.IsNullOrEmpty(filtro)
-                ? db.Productos.ToList()
-                : db.Productos
-                    .Where(p => p.Code.Contains(filtro) || p.Name.Contains(filtro))
-                    .ToList();
+            var query = db.Productos
+                .Where(p => (string.IsNullOrEmpty(filtro) || p.Code.Contains(filtro) || p.Name.Contains(filtro)))
+                .Select(p => new Minimarket.DTOs.ProductListDto
+                {
+                    Code = p.Code,
+                    Name = p.Name,
+                    Category = p.Category != null ? p.Category.Name : "",
+                    Cost = p.Cost,
+                    Price = p.Price,
+                    Stock = p.Stock,
+                    MinStock = p.MinStock,
+                    IsActive = p.IsActive
+                });
+            return query.ToList();
         }
+
+        public static List<Product> GetAll()
+        {
+            using var db = new MinimarketContext();
+            return db.Productos.ToList();
+        }
+
+        public static void ChangeActiveStatus(string codigo)
+        {
+            using var db = new MinimarketContext();
+            var producto = db.Productos.FirstOrDefault(p => p.Code == codigo);
+            if (producto != null)
+            {
+                producto.IsActive = !producto.IsActive;
+                db.SaveChanges();
+            }
+        }
+
 
         public static Product? GetByCodigo(string codigo)
         {

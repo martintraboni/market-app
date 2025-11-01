@@ -1,4 +1,4 @@
-using Data; // For CategoryRepository
+using MiniMarket.Data;
 using Models;
 
 namespace Minimarket.UI
@@ -54,7 +54,7 @@ namespace Minimarket.UI
             categorias = CategoryRepository.GetAll();
             cmbCategoria.DataSource = categorias;
             cmbCategoria.DisplayMember = "Name";
-            cmbCategoria.ValueMember = "CategoryId";
+            cmbCategoria.ValueMember = "Id";
 
             // Inicializar campos
             txtCodigo.Text = Producto.Code;
@@ -77,8 +77,9 @@ namespace Minimarket.UI
                 }
                 Producto.Code = txtCodigo.Text.Trim();
                 Producto.Name = txtDescripcion.Text.Trim();
-                Producto.Category = (Category)cmbCategoria.SelectedItem;
+                // Solo asignar CategoryId, no la entidad Category, para evitar problemas de tracking de EF
                 Producto.CategoryId = ((Category)cmbCategoria.SelectedItem).Id;
+                // Producto.Category = null; // Opcional: asegurarse de que no se asigne la entidad
                 Producto.Price = nudPrecio.Value;
                 Producto.Stock = (int)nudStock.Value;
                 Producto.MinStock = (int)nudStockMin.Value;

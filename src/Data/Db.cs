@@ -92,19 +92,3 @@ public class MinimarketContext : DbContext
             .HasForeignKey(al => al.UserId);
     }
 }
-
-public class Db
-{
-    public List<User> Users { get; set; } = new();
-    public List<Product> Products { get; set; } = new();
-    public List<Category> Categories { get; set; } = new();
-    public List<Sale> Sales { get; set; } = new();
-    public List<SaleItem> SaleItems { get; set; } = new();
-    public List<InventoryMovement> InventoryMovements { get; set; } = new();
-    public List<CashMovement> CashMovements { get; set; } = new();
-    public List<Supplier> Suppliers { get; set; } = new();
-    public List<Purchase> Purchases { get; set; } = new();
-    public List<PurchaseItem> PurchaseItems { get; set; } = new();
-    public List<CashClose> CashCloses { get; set; } = new();
-    // ...otros miembros...
-}

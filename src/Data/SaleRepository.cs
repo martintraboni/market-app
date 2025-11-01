@@ -11,19 +11,40 @@ namespace Minimarket.Data
             using var tx = db.Database.BeginTransaction();
             try
             {
-                // Agregar la venta y sus ítems
+                // Agregar la venta y sus Ã­tems
                 db.Ventas.Add(v);
                 db.SaveChanges();
 
-                // Actualizar stock de cada producto vendido
+                // Actualizar stock y registrar movimientos de inventario
                 foreach (var it in v.SaleItems)
                 {
                     var producto = db.Productos.FirstOrDefault(p => p.Id == it.ProductId);
                     if (producto != null)
                     {
                         producto.Stock -= it.Qty;
+                        db.MovimientosInventario.Add(new InventoryMovement
+                        {
+                            ProductId = producto.Id,
+                            DateTime = DateTime.Now,
+                            Type = "OUT",
+                            Qty = it.Qty,
+                            Reason = "SALE",
+                            RefId = v.Id
+                        });
                     }
                 }
+                db.SaveChanges();
+
+                // Registrar movimiento de caja (ingreso por venta)
+                db.MovimientosCaja.Add(new CashMovement
+                {
+                    DateTime = DateTime.Now,
+                    Type = "IN",
+                    Amount = v.Total,
+                    Concept = "Venta",
+                    UserId = v.UserId,
+                    SaleId = v.Id
+                });
                 db.SaveChanges();
 
                 tx.Commit();

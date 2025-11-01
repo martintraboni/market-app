@@ -5,16 +5,10 @@ namespace Minimarket.Data
 {
     public class UserRepository
     {
-        private readonly Db _db;
-
-        public UserRepository(Db db)
-        {
-            _db = db ?? throw new ArgumentNullException(nameof(db));
-        }
-
         public User? GetUserById(int id)
         {
-            return _db.Users.FirstOrDefault(u => u.Id == id);
+            using var db = new MinimarketContext();
+            return db.Usuarios.FirstOrDefault(u => u.Id == id);
         }
 
         public User Login(string username, string password)
