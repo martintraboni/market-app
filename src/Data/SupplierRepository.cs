@@ -1,14 +1,15 @@
-using Models;
+using Minimarket.DTOs;
 
 namespace Minimarket.Data
 {
     public static class SupplierRepository
     {
-        public static List<Minimarket.DTOs.SupplierListDto> GetAll()
+        public static List<SupplierListDto> GetAll()
         {
             using var db = new MinimarketContext();
             return db.Proveedores
-                .Select(s => new Minimarket.DTOs.SupplierListDto
+                .OrderByDescending(x => x.Id)
+                .Select(s => new SupplierListDto
                 {
                     Id = s.Id,
                     Name = s.Name,

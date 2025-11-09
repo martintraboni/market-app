@@ -29,6 +29,15 @@ namespace Minimarket.Data
             return db.Productos.ToList();
         }
 
+        public static List<Product> GetAllForSale()
+        {
+            using var db = new MinimarketContext();
+            return db.Productos
+                .Where(p => p.IsActive && p.Stock > 0)
+                .OrderBy(p => p.Name)
+                .ToList();
+        }
+
         public static void ChangeActiveStatus(string codigo)
         {
             using var db = new MinimarketContext();
@@ -52,6 +61,16 @@ namespace Minimarket.Data
             using var db = new MinimarketContext();
             db.Productos.Add(p);
             db.SaveChanges();
+
+            // Registrar en auditoría
+            db.Auditoria.Add(new AuditLog
+            {
+                UserId = Session.CurrentUser?.Id ?? 1,
+                DateTime = DateTime.Now,
+                Event = Constants.AuditEventCreateProduct,
+                Details = $"Código: {p.Code} - Nombre: {p.Name} - Precio: {p.Price:C2}"
+            });
+            db.SaveChanges();
         }
 
         public static void Update(Product p)
@@ -66,6 +85,16 @@ namespace Minimarket.Data
                 existing.Stock = p.Stock;
                 existing.MinStock = p.MinStock;
                 db.SaveChanges();
+
+                // Registrar en auditoría
+                db.Auditoria.Add(new AuditLog
+                {
+                    UserId = Session.CurrentUser?.Id ?? 1,
+                    DateTime = DateTime.Now,
+                    Event = Constants.AuditEventUpdateProduct,
+                    Details = $"Código: {p.Code} - Nombre: {p.Name} - Precio: {p.Price:C2}"
+                });
+                db.SaveChanges();
             }
         }
 
@@ -75,7 +104,18 @@ namespace Minimarket.Data
             var producto = db.Productos.FirstOrDefault(p => p.Code == codigo);
             if (producto != null)
             {
+                var nombre = producto.Name;
                 db.Productos.Remove(producto);
+                db.SaveChanges();
+
+                // Registrar en auditoría
+                db.Auditoria.Add(new AuditLog
+                {
+                    UserId = Session.CurrentUser?.Id ?? 1,
+                    DateTime = DateTime.Now,
+                    Event = Constants.AuditEventDeleteProduct,
+                    Details = $"Código: {codigo} - Nombre: {nombre}"
+                });
                 db.SaveChanges();
             }
         }

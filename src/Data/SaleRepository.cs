@@ -1,10 +1,36 @@
 using Microsoft.EntityFrameworkCore;
 using Models;
+using Minimarket.DTOs;
 
 namespace Minimarket.Data
 {
     public static class SaleRepository
     {
+        public static List<SaleListDto> GetAllDto()
+        {
+            using var db = new MinimarketContext();
+            return db.Ventas
+                .OrderByDescending(v => v.DateTime)
+                .Select(v => new SaleListDto
+                {
+                    Id = v.Id,
+                    User = v.User.Username,
+                    PaymentMethod = v.PaymentMethod,
+                    Total = v.Total,
+                    DateTime = v.DateTime
+                })
+                .ToList();
+        }
+
+        public static Sale? GetByIdWithItems(int id)
+        {
+            using var db = new MinimarketContext();
+            return db.Ventas
+                .Include(v => v.SaleItems)
+                .ThenInclude(si => si.Product)
+                .FirstOrDefault(v => v.Id == id);
+        }
+
         public static int CrearVenta(Sale v)
         {
             using var db = new MinimarketContext();
@@ -39,11 +65,21 @@ namespace Minimarket.Data
                 db.MovimientosCaja.Add(new CashMovement
                 {
                     DateTime = DateTime.Now,
-                    Type = "IN",
+                    Type = Constants.CashMovementTypeIn,
                     Amount = v.Total,
                     Concept = "Venta",
                     UserId = v.UserId,
                     SaleId = v.Id
+                });
+                db.SaveChanges();
+
+                // Registrar en auditoría
+                db.Auditoria.Add(new AuditLog
+                {
+                    UserId = v.UserId,
+                    DateTime = DateTime.Now,
+                    Event = Constants.AuditEventCreateSale,
+                    Details = $"Venta N° {v.Id} - Método: {v.PaymentMethod} - Total: {v.Total:C2}"
                 });
                 db.SaveChanges();
 
@@ -64,6 +100,23 @@ namespace Minimarket.Data
                 .Where(v => v.DateTime >= desde && v.DateTime <= hasta)
                 .OrderByDescending(v => v.DateTime)
                 .Include(v => v.SaleItems)
+                .ToList();
+        }
+
+        public static List<SaleListDto> GetReporteDtoByFecha(DateTime desde, DateTime hasta)
+        {
+            using var db = new MinimarketContext();
+            return db.Ventas
+                .Where(v => v.DateTime >= desde && v.DateTime <= hasta)
+                .OrderByDescending(v => v.DateTime)
+                .Select(v => new SaleListDto
+                {
+                    Id = v.Id,
+                    DateTime = v.DateTime,
+                    User = v.User.Username,
+                    PaymentMethod = v.PaymentMethod,
+                    Total = v.Total
+                })
                 .ToList();
         }
     }

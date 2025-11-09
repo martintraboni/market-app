@@ -6,6 +6,7 @@ public class MinimarketContext : DbContext
 {
     public DbSet<Product> Productos { get; set; }
     public DbSet<User> Usuarios { get; set; }
+    public DbSet<Role> Roles { get; set; }
     public DbSet<Sale> Ventas { get; set; }
     public DbSet<SaleItem> Items { get; set; }
     public DbSet<Category> Categorias { get; set; }
@@ -26,6 +27,11 @@ public class MinimarketContext : DbContext
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Username)
             .IsUnique();
+
+        modelBuilder.Entity<User>()
+            .HasOne(u => u.Role)
+            .WithMany(r => r.Users)
+            .HasForeignKey(u => u.RoleId);
 
         modelBuilder.Entity<Product>()
             .HasIndex(p => p.Code)

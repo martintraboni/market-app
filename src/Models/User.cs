@@ -7,11 +7,12 @@ namespace Models
 
         public string FullName { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
-        public string Role { get; set; } = string.Empty;
+        public int RoleId { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
 
-        // Relaciones de navegación
+        // Relaciones de navegaciÃ³n
+        public Role Role { get; set; }
         public ICollection<Sale> Sales { get; set; }
     }
 }
