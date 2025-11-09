@@ -3,6 +3,7 @@
     <OutputType>WinExe</OutputType>
   <TargetFramework>net8.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
+	<ApplicationIcon>taml.ico</ApplicationIcon>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
@@ -13,5 +14,10 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="taml.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>

@@ -31,11 +31,13 @@ namespace Minimarket.UI
                 CategoryId = p.CategoryId,
                 Price = p.Price,
                 Stock = p.Stock,
-                MinStock = p.MinStock
+                MinStock = p.MinStock,
+                IsActive = esNuevo ? true : p.IsActive
             };
 
             Text = esNuevo ? "Nuevo Producto" : "Editar Producto";
             Width = 400; Height = 400;
+            try { this.Icon = new System.Drawing.Icon("taml.ico"); } catch { }
 
             var layout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 7, AutoSize = true };
             layout.Controls.Add(new Label { Text = "Código" }, 0, 0); layout.Controls.Add(txtCodigo, 1, 0);
@@ -74,6 +76,11 @@ namespace Minimarket.UI
                 if (cmbCategoria.SelectedItem == null)
                 {
                     MessageBox.Show("Debe seleccionar una categoría"); return;
+                }
+                if (nudStock.Value < nudStockMin.Value)
+                {
+                    if (MessageBox.Show("El stock es menor al stock mínimo. ¿Desea continuar?", "Advertencia", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+                        return;
                 }
                 Producto.Code = txtCodigo.Text.Trim();
                 Producto.Name = txtDescripcion.Text.Trim();

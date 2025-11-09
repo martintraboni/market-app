@@ -20,6 +20,7 @@ namespace Minimarket.UI
         {
             Text = "Ventas";
             Width = 900; Height = 600;
+            try { this.Icon = new System.Drawing.Icon("taml.ico"); } catch { }
 
             cboPago.Items.AddRange(new object[] { "Efectivo", "Tarjeta", "QR" });
             cboPago.SelectedIndex = 0;

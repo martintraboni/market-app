@@ -1,9 +1,26 @@
+using Minimarket.DTOs;
 using Models;
 
 namespace Minimarket.Data
 {
     public static class PurchaseRepository
     {
+        public static List<PurchaseListDto> GetAllDto()
+        {
+            using var db = new MinimarketContext();
+            return db.Compras
+                .Select(c => new PurchaseListDto
+                {
+                    Id = c.Id,
+                    SupplierId = c.SupplierId,
+                    SupplierName = c.Supplier.Name,
+                    Date = c.Date,
+                    NroDoc = c.DocNumber,
+                    Total = c.Total
+                })
+                .ToList();
+        }
+
         public static int CrearCompra(Purchase compra, bool registrarEgresoCaja = false)
         {
             using var db = new MinimarketContext();

@@ -18,6 +18,7 @@ namespace Minimarket.UI
             Text = "Login";
             Width = 300;
             Height = 180;
+            try { this.Icon = new System.Drawing.Icon("taml.ico"); } catch { }
             var lblUser = new Label { Text = "Usuario", Top = 20, Left = 20, Width = 80 };
             txtUser.Top = 20; txtUser.Left = 110; txtUser.Width = 140;
             var lblPass = new Label { Text = "Contraseña", Top = 60, Left = 20, Width = 80 };

@@ -6,9 +6,10 @@ namespace Minimarket.UI
         private Label lblUsuario = new Label { Left = 200, Top = 5, AutoSize = true };
         public MainForm(Models.User usuario)
         {
-            Text = $"Minimarket - Sistema de Gestión | Usuario: {usuario.FullName}";
+            Text = $"Minimarket - Sistema de Gestin | Usuario: {usuario.FullName}";
             Width = 1000;
             Height = 700;
+            try { this.Icon = new System.Drawing.Icon("taml.ico"); } catch { }
 
             var mArchivo = new ToolStripMenuItem("Archivo");
             var mSalir = new ToolStripMenuItem("Salir", null, (s, e) => Close());

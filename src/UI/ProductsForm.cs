@@ -16,9 +16,22 @@ namespace Minimarket.UI
         {
             Text = "Productos";
             Width = 900; Height = 600;
+            try { this.Icon = new System.Drawing.Icon("taml.ico"); } catch { }
+
 
             var top = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true };
             top.Controls.AddRange(new Control[] { txtFiltro, btnBuscar, btnAgregar, btnEditar, btnInhabilitar });
+
+            grid.AutoGenerateColumns = false;
+            grid.Columns.Clear();
+            grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Code", HeaderText = "Código" });
+            grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Name", HeaderText = "Nombre" });
+            grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Category", HeaderText = "Categoría" });
+            grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Cost", HeaderText = "Costo" });
+            grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Price", HeaderText = "Precio" });
+            grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Stock", HeaderText = "Stock" });
+            grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "MinStock", HeaderText = "Stock Mínimo" });
+            grid.Columns.Add(new DataGridViewCheckBoxColumn { DataPropertyName = "IsActive", HeaderText = "Activo" });
 
             Controls.Add(grid);
             Controls.Add(top);

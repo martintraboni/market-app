@@ -21,6 +21,7 @@ namespace Minimarket.UI
         {
             Text = dto == null ? "Nuevo Proveedor" : "Editar Proveedor";
             Width = 350; Height = 250;
+            try { this.Icon = new System.Drawing.Icon("taml.ico"); } catch { }
             var layout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 5, AutoSize = true };
             layout.Controls.Add(new Label { Text = "Nombre" }, 0, 0); layout.Controls.Add(txtNombre, 1, 0);
             layout.Controls.Add(new Label { Text = "CUIT" }, 0, 1); layout.Controls.Add(txtCUIT, 1, 1);

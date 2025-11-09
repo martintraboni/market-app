@@ -16,6 +16,7 @@ namespace Minimarket.UI
         {
             Text = "Reportes de Ventas";
             Width = 900; Height = 600;
+            try { this.Icon = new System.Drawing.Icon("taml.ico"); } catch { }
 
             var top = new FlowLayoutPanel{ Dock = DockStyle.Top, AutoSize=true};
             top.Controls.AddRange(new Control[]{ new Label{ Text="Desde"}, dpDesde, new Label{ Text="Hasta"}, dpHasta, btnBuscar, btnExportar });

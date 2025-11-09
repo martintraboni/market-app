@@ -1,85 +1,77 @@
-using Minimarket.DTOs;
 using MiniMarket.Data;
-using Models;
 
 namespace Minimarket.UI
 {
     public class CategoriesForm : Form
     {
-        private DataGridView grid = new DataGridView { Dock = DockStyle.Fill, ReadOnly = true, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill };
-        private TextBox txtNombre = new TextBox { PlaceholderText = "Nombre de categoría" };
+        private DataGridView dgvCategories = new DataGridView { Dock = DockStyle.Fill, ReadOnly = true, AutoGenerateColumns = false };
         private Button btnAgregar = new Button { Text = "Agregar" };
         private Button btnEditar = new Button { Text = "Editar" };
         private Button btnEliminar = new Button { Text = "Eliminar" };
+        private BindingSource bindingSource = new BindingSource();
 
         public CategoriesForm()
         {
+
             Text = "Categorías";
-            Width = 500; Height = 400;
+            Width = 600;
+            Height = 400;
+            StartPosition = FormStartPosition.CenterParent;
+            try { this.Icon = new System.Drawing.Icon("taml.ico"); } catch { }
 
-            var top = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true };
-            top.Controls.AddRange(new Control[] { txtNombre, btnAgregar, btnEditar, btnEliminar });
+            var panelBotones = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true };
+            panelBotones.Controls.AddRange(new Control[] { btnAgregar, btnEditar, btnEliminar });
 
-            Controls.Add(grid);
-            Controls.Add(top);
+            dgvCategories.AllowUserToAddRows = false;
+            Controls.Add(dgvCategories);
+            Controls.Add(panelBotones);
 
-            Load += (s, e) => Cargar();
-            btnAgregar.Click += (s, e) => Agregar();
-            btnEditar.Click += (s, e) => Editar();
-            btnEliminar.Click += (s, e) => Eliminar();
+            dgvCategories.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Id", HeaderText = "ID", FillWeight = 20 });
+            dgvCategories.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Name", HeaderText = "Nombre", FillWeight = 80 });
+
+            Load += (s, e) => CargarCategorias();
+            btnAgregar.Click += (s, e) => AgregarCategoria();
+            btnEditar.Click += (s, e) => EditarCategoria();
+            btnEliminar.Click += (s, e) => EliminarCategoria();
         }
 
-        private void Cargar()
+        private void CargarCategorias()
         {
-            grid.DataSource = CategoryRepository.GetAllDto();
+            var categorias = CategoryRepository.GetAll();
+            bindingSource.DataSource = categorias;
+            dgvCategories.DataSource = bindingSource;
         }
 
-        private void Agregar()
+        private void AgregarCategoria()
         {
-            var nombre = txtNombre.Text.Trim();
-            if (string.IsNullOrWhiteSpace(nombre))
+            var form = new CategoryEditForm();
+            if (form.ShowDialog() == DialogResult.OK)
             {
-                MessageBox.Show("El nombre es obligatorio");
-                return;
+                CargarCategorias();
             }
-            using var db = new MinimarketContext();
-            db.Categorias.Add(new Category { Name = nombre });
-            db.SaveChanges();
-            Cargar();
-            txtNombre.Clear();
         }
 
-        private void Editar()
+        private void EditarCategoria()
         {
-            if (grid.CurrentRow == null) return;
-            var cat = (CategoryListDto)grid.CurrentRow.DataBoundItem;
-            var nuevoNombre = Microsoft.VisualBasic.Interaction.InputBox("Nuevo nombre:", "Editar Categoría", cat.Name);
-            if (!string.IsNullOrWhiteSpace(nuevoNombre))
+            if (bindingSource.Current is Models.Category categoria)
             {
-                using var db = new MinimarketContext();
-                var c = db.Categorias.FirstOrDefault(x => x.Id == cat.Id);
-                if (c != null)
+                var form = new CategoryEditForm(categoria);
+                if (form.ShowDialog() == DialogResult.OK)
                 {
-                    c.Name = nuevoNombre;
-                    db.SaveChanges();
-                    Cargar();
+                    CargarCategorias();
                 }
             }
         }
 
-        private void Eliminar()
+        private void EliminarCategoria()
         {
-            if (grid.CurrentRow == null) return;
-            var cat = (CategoryListDto)grid.CurrentRow.DataBoundItem;
-            if (MessageBox.Show($"¿Eliminar {cat.Name}?", "Confirmar", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            if (bindingSource.Current is Models.Category categoria)
             {
-                using var db = new MinimarketContext();
-                var c = db.Categorias.FirstOrDefault(x => x.Id == cat.Id);
-                if (c != null)
+                var result = MessageBox.Show($"¿Está seguro de eliminar la categoría '{categoria.Name}'?", "Confirmar eliminación", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (result == DialogResult.Yes)
                 {
-                    db.Categorias.Remove(c);
-                    db.SaveChanges();
-                    Cargar();
+                    CategoryRepository.Delete(categoria.Id);
+                    CargarCategorias();
                 }
             }
         }

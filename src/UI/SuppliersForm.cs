@@ -19,9 +19,19 @@ namespace Minimarket.UI
         {
             Text = "Proveedores";
             Width = 700; Height = 400;
+            try { this.Icon = new System.Drawing.Icon("taml.ico"); } catch { }
 
             var top = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true };
             top.Controls.AddRange(new Control[] { txtNombre, txtCUIT, txtTelefono, txtEmail, btnAgregar, btnEditar, btnEliminar });
+
+
+            grid.AutoGenerateColumns = false;
+            grid.Columns.Clear();
+            grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Id", HeaderText = "ID" });
+            grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Name", HeaderText = "Nombre" });
+            grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "CUIT", HeaderText = "CUIT" });
+            grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Phone", HeaderText = "Teléfono" });
+            grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Email", HeaderText = "Email" });
 
             Controls.Add(grid);
             Controls.Add(top);

@@ -15,6 +15,7 @@ namespace Minimarket.UI
         {
             Text = "Movimientos de Inventario";
             Width = 900; Height = 500;
+            try { this.Icon = new System.Drawing.Icon("taml.ico"); } catch { }
 
             var top = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true };
             cmbTipo.Items.AddRange(new object[] { "IN", "OUT", "ADJ" });

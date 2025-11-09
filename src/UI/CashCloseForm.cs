@@ -17,6 +17,7 @@ namespace Minimarket.UI
         {
             Text = "Cierre / Arqueo de Caja";
             Width = 900; Height = 500;
+            try { this.Icon = new System.Drawing.Icon("taml.ico"); } catch { }
 
             var top = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true };
             top.Controls.AddRange(new Control[] {

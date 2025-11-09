@@ -1,3 +1,5 @@
+using Minimarket.Data;
+using Minimarket.DTOs;
 using Models;
 
 namespace Minimarket.UI
@@ -15,9 +17,43 @@ namespace Minimarket.UI
         {
             Text = "Compras";
             Width = 900; Height = 500;
+            try { this.Icon = new System.Drawing.Icon("taml.ico"); } catch { }
 
-            var top = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true };
-            top.Controls.AddRange(new Control[] { new Label { Text = "Proveedor:" }, cmbProveedor, new Label { Text = "Fecha:" }, dtFecha, new Label { Text = "Nro. Doc:" }, txtDoc, btnAgregar, btnVerDetalle });
+
+            var top = new TableLayoutPanel
+            {
+                Dock = DockStyle.Top,
+                AutoSize = true,
+                ColumnCount = 8,
+                RowCount = 2,
+                Padding = new Padding(8),
+            };
+            top.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize)); // Label Proveedor
+            top.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25)); // Combo Proveedor
+            top.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize)); // Label Fecha
+            top.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20)); // Fecha
+            top.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize)); // Label Doc
+            top.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20)); // Doc
+            top.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize)); // Botón Agregar
+            top.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize)); // Botón Detalle
+
+            top.Controls.Add(new Label { Text = "Proveedor:", Anchor = AnchorStyles.Right, TextAlign = System.Drawing.ContentAlignment.MiddleRight }, 0, 0);
+            top.Controls.Add(cmbProveedor, 1, 0);
+            top.Controls.Add(new Label { Text = "Fecha:", Anchor = AnchorStyles.Right, TextAlign = System.Drawing.ContentAlignment.MiddleRight }, 2, 0);
+            top.Controls.Add(dtFecha, 3, 0);
+            top.Controls.Add(new Label { Text = "N° Doc usuario:", Anchor = AnchorStyles.Right, TextAlign = System.Drawing.ContentAlignment.MiddleRight }, 4, 0);
+            top.Controls.Add(txtDoc, 5, 0);
+            top.Controls.Add(btnAgregar, 6, 0);
+            top.Controls.Add(btnVerDetalle, 7, 0);
+
+
+            grid.AutoGenerateColumns = false;
+            grid.Columns.Clear();
+            grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Id", HeaderText = "ID" });
+            grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "SupplierName", HeaderText = "Proveedor" });
+            grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Date", HeaderText = "Fecha" });
+            grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "NroDoc", HeaderText = "Nro. Doc" });
+            grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Total", HeaderText = "Total" });
 
             Controls.Add(grid);
             Controls.Add(top);
@@ -33,7 +69,7 @@ namespace Minimarket.UI
             cmbProveedor.DataSource = db.Proveedores.ToList();
             cmbProveedor.DisplayMember = "Name";
             cmbProveedor.ValueMember = "Id";
-            grid.DataSource = db.Compras.ToList();
+            grid.DataSource = PurchaseRepository.GetAllDto();
         }
 
         private void NuevaCompra()
@@ -54,8 +90,9 @@ namespace Minimarket.UI
         private void VerDetalle()
         {
             if (grid.CurrentRow == null) return;
-            var compra = (Purchase)grid.CurrentRow.DataBoundItem;
-            var f = new PurchaseDetailForm(compra.Id);
+            var dto = grid.CurrentRow.DataBoundItem as PurchaseListDto;
+            if (dto == null) return;
+            var f = new PurchaseDetailForm(dto.Id);
             f.ShowDialog();
             Cargar();
         }
@@ -74,12 +111,44 @@ namespace Minimarket.UI
 
         public PurchaseDetailForm(int compraId)
         {
+
             this.compraId = compraId;
             Text = "Detalle de Compra";
-            Width = 700; Height = 400;
+            Width = 900; Height = 350;
 
-            var top = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true };
-            top.Controls.AddRange(new Control[] { new Label { Text = "Producto:" }, cmbProducto, new Label { Text = "Cantidad:" }, nudCantidad, new Label { Text = "Costo:" }, nudCosto, btnAgregar, btnEliminar });
+            var top = new TableLayoutPanel
+            {
+                Dock = DockStyle.Top,
+                AutoSize = true,
+                ColumnCount = 8,
+                RowCount = 1,
+                Padding = new Padding(8),
+            };
+            top.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize)); // Label Producto
+            top.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30)); // Combo Producto
+            top.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize)); // Label Cantidad
+            grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "SupplierName", HeaderText = "Proveedor" });
+            top.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize)); // Label Costo
+            top.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 15)); // Costo
+            top.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize)); // Botón Agregar
+            top.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize)); // Botón Eliminar
+
+            top.Controls.Add(new Label { Text = "Producto:", Anchor = AnchorStyles.Right, TextAlign = System.Drawing.ContentAlignment.MiddleRight }, 0, 0);
+            top.Controls.Add(cmbProducto, 1, 0);
+            top.Controls.Add(new Label { Text = "Cantidad:", Anchor = AnchorStyles.Right, TextAlign = System.Drawing.ContentAlignment.MiddleRight }, 2, 0);
+            top.Controls.Add(nudCantidad, 3, 0);
+            top.Controls.Add(new Label { Text = "Costo:", Anchor = AnchorStyles.Right, TextAlign = System.Drawing.ContentAlignment.MiddleRight }, 4, 0);
+            top.Controls.Add(nudCosto, 5, 0);
+            top.Controls.Add(btnAgregar, 6, 0);
+            top.Controls.Add(btnEliminar, 7, 0);
+
+            grid.AutoGenerateColumns = false;
+            grid.Columns.Clear();
+            grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Id", HeaderText = "ID" });
+            grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "ProductName", HeaderText = "Producto" });
+            grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Qty", HeaderText = "Cantidad" });
+            grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Cost", HeaderText = "Costo unitario" });
+            grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "Subtotal", HeaderText = "Subtotal" });
 
             Controls.Add(grid);
             Controls.Add(top);
@@ -95,7 +164,19 @@ namespace Minimarket.UI
             cmbProducto.DataSource = db.Productos.ToList();
             cmbProducto.DisplayMember = "Name";
             cmbProducto.ValueMember = "Id";
-            grid.DataSource = db.DetalleCompras.Where(x => x.PurchaseId == compraId).ToList();
+            // Usar un DTO para mostrar los datos relevantes en la grilla
+            var items = db.DetalleCompras
+                .Where(x => x.PurchaseId == compraId)
+                .Select(x => new
+                {
+                    x.Id,
+                    ProductName = x.Product.Name,
+                    x.Qty,
+                    x.Cost,
+                    x.Subtotal
+                })
+                .ToList();
+            grid.DataSource = items;
         }
 
         private void Agregar()
@@ -108,9 +189,14 @@ namespace Minimarket.UI
             using var db = new MinimarketContext();
             db.DetalleCompras.Add(new PurchaseItem { PurchaseId = compraId, ProductId = producto.Id, Qty = cantidad, Cost = costo, Subtotal = cantidad * costo });
             db.SaveChanges();
-            // Actualizar stock
+            // Actualizar stock y costo
             var prod = db.Productos.FirstOrDefault(p => p.Id == producto.Id);
-            if (prod != null) { prod.Stock += cantidad; db.SaveChanges(); }
+            if (prod != null)
+            {
+                prod.Stock += cantidad;
+                prod.Cost = costo; // Actualizar el costo del producto con el último costo de compra
+                db.SaveChanges();
+            }
             // Actualizar total de compra
             var compra = db.Compras.FirstOrDefault(c => c.Id == compraId);
             if (compra != null)
@@ -124,9 +210,12 @@ namespace Minimarket.UI
         private void Eliminar()
         {
             if (grid.CurrentRow == null) return;
-            var item = (PurchaseItem)grid.CurrentRow.DataBoundItem;
+            var row = grid.CurrentRow.DataBoundItem;
+            var idProp = row.GetType().GetProperty("Id");
+            if (idProp == null) return;
+            int itemId = (int)idProp.GetValue(row);
             using var db = new MinimarketContext();
-            var it = db.DetalleCompras.FirstOrDefault(x => x.Id == item.Id);
+            var it = db.DetalleCompras.FirstOrDefault(x => x.Id == itemId);
             if (it != null)
             {
                 // Descontar stock
