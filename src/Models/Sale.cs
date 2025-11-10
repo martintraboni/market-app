@@ -1,26 +1,17 @@
-using System;
-using System.Collections.Generic;
 
-namespace Minimarket.Models
+namespace Models
 {
     public class Sale
     {
-        public int IDVenta { get; set; }
-        public DateTime Fecha { get; set; } = DateTime.Now;
+        public int Id { get; set; }
+        public DateTime DateTime { get; set; }
+        public int UserId { get; set; }
+        public string PaymentMethod { get; set; } = string.Empty;
         public decimal Total { get; set; }
-        public string MedioPago { get; set; } = "Efectivo";
-        public List<SaleItem> Items { get; set; } = new();
-    }
 
-    public class SaleItem
-    {
-        public int IDDetalle { get; set; }
-        public int IDVenta { get; set; }
-        public int IDProducto { get; set; }
-        public string Codigo { get; set; } = "";
-        public string Descripcion { get; set; } = "";
-        public int Cantidad { get; set; }
-        public decimal PrecioUnitario { get; set; }
-        public decimal Subtotal => Cantidad * PrecioUnitario;
+        // Relaciones de navegación
+        public User User { get; set; }
+        public ICollection<SaleItem> SaleItems { get; set; }
+        public ICollection<CashMovement> CashMovements { get; set; }
     }
 }

@@ -1,93 +1,170 @@
-using System.Collections.Generic;
-using System.Data;
-using System.Data.SqlClient;
-using Minimarket.Models;
+using Models;
 
 namespace Minimarket.Data
 {
     public static class ProductRepository
     {
-        public static List<Product> GetAll(string filtro = "")
+        public static List<Minimarket.DTOs.ProductListDto> GetAllDto(string filtro = "")
         {
-            string sql = "SELECT * FROM Productos";
-            if (!string.IsNullOrWhiteSpace(filtro))
-                sql += " WHERE Codigo LIKE @f OR Descripcion LIKE @f";
-            var param = string.IsNullOrWhiteSpace(filtro) ? null :
-                new[] { new SqlParameter("@f", $"%{filtro}%") };
-            var dt = Db.Query(sql, param ?? new SqlParameter[] { });
-            var list = new List<Product>();
-            foreach (DataRow row in dt.Rows)
-            {
-                list.Add(new Product
+            using var db = new MinimarketContext();
+            var query = db.Productos
+                .Where(p => (string.IsNullOrEmpty(filtro) || p.Code.Contains(filtro) || p.Name.Contains(filtro)))
+                .Select(p => new Minimarket.DTOs.ProductListDto
                 {
-                    IDProducto = (int)row["IDProducto"],
-                    Codigo = row["Codigo"].ToString()!,
-                    Descripcion = row["Descripcion"].ToString()!,
-                    Categoria = row["Categoria"].ToString()!,
-                    Precio = (decimal)row["Precio"],
-                    Stock = (int)row["Stock"],
-                    StockMin = (int)row["StockMin"]
+                    Code = p.Code,
+                    Name = p.Name,
+                    Category = p.Category != null ? p.Category.Name : "",
+                    Cost = p.Cost,
+                    Price = p.Price,
+                    Stock = p.Stock,
+                    MinStock = p.MinStock,
+                    IsActive = p.IsActive
                 });
-            }
-            return list;
+            return query.ToList();
         }
+
+        public static List<Product> GetAll()
+        {
+            using var db = new MinimarketContext();
+            return db.Productos.ToList();
+        }
+
+        public static List<Product> GetAllForSale()
+        {
+            using var db = new MinimarketContext();
+            return db.Productos
+                .Where(p => p.IsActive && p.Stock > 0)
+                .OrderBy(p => p.Name)
+                .ToList();
+        }
+
+        public static void ChangeActiveStatus(string codigo)
+        {
+            using var db = new MinimarketContext();
+            var producto = db.Productos.FirstOrDefault(p => p.Code == codigo);
+            if (producto != null)
+            {
+                producto.IsActive = !producto.IsActive;
+                db.SaveChanges();
+            }
+        }
+
 
         public static Product? GetByCodigo(string codigo)
         {
-            string sql = "SELECT TOP 1 * FROM Productos WHERE Codigo=@c";
-            var dt = Db.Query(sql, new SqlParameter("@c", codigo));
-            if (dt.Rows.Count == 0) return null;
-            var row = dt.Rows[0];
-            return new Product
-            {
-                IDProducto = (int)row["IDProducto"],
-                Codigo = row["Codigo"].ToString()!,
-                Descripcion = row["Descripcion"].ToString()!,
-                Categoria = row["Categoria"].ToString()!,
-                Precio = (decimal)row["Precio"],
-                Stock = (int)row["Stock"],
-                StockMin = (int)row["StockMin"]
-            };
+            using var db = new MinimarketContext();
+            return db.Productos.FirstOrDefault(p => p.Code == codigo);
         }
 
         public static void Insert(Product p)
         {
-            string sql = @"INSERT INTO Productos (Codigo, Descripcion, Categoria, Precio, Stock, StockMin)
-                           VALUES (@Codigo, @Descripcion, @Categoria, @Precio, @Stock, @StockMin)";
-            Db.Execute(sql,
-                new SqlParameter("@Codigo", p.Codigo),
-                new SqlParameter("@Descripcion", p.Descripcion),
-                new SqlParameter("@Categoria", p.Categoria),
-                new SqlParameter("@Precio", p.Precio),
-                new SqlParameter("@Stock", p.Stock),
-                new SqlParameter("@StockMin", p.StockMin));
+            using var db = new MinimarketContext();
+            db.Productos.Add(p);
+            db.SaveChanges();
+
+            // Registrar en auditoría
+            db.Auditoria.Add(new AuditLog
+            {
+                UserId = Session.CurrentUser?.Id ?? 1,
+                DateTime = DateTime.Now,
+                Event = Constants.AuditEventCreateProduct,
+                Details = $"Código: {p.Code} - Nombre: {p.Name} - Precio: {p.Price:C2}"
+            });
+            db.SaveChanges();
         }
 
         public static void Update(Product p)
         {
-            string sql = @"UPDATE Productos SET Descripcion=@Descripcion, Categoria=@Categoria, Precio=@Precio,
-                           Stock=@Stock, StockMin=@StockMin WHERE Codigo=@Codigo";
-            Db.Execute(sql,
-                new SqlParameter("@Descripcion", p.Descripcion),
-                new SqlParameter("@Categoria", p.Categoria),
-                new SqlParameter("@Precio", p.Precio),
-                new SqlParameter("@Stock", p.Stock),
-                new SqlParameter("@StockMin", p.StockMin),
-                new SqlParameter("@Codigo", p.Codigo));
+            using var db = new MinimarketContext();
+            var existing = db.Productos.FirstOrDefault(x => x.Code == p.Code);
+            if (existing != null)
+            {
+                bool precioCambio = existing.Price != p.Price;
+                decimal precioAnterior = existing.Price;
+                
+                existing.Name = p.Name;
+                existing.CategoryId = p.CategoryId;
+                existing.Price = p.Price;
+                existing.Stock = p.Stock;
+                existing.MinStock = p.MinStock;
+                db.SaveChanges();
+
+                // Registrar en auditoría
+                db.Auditoria.Add(new AuditLog
+                {
+                    UserId = Session.CurrentUser?.Id ?? 1,
+                    DateTime = DateTime.Now,
+                    Event = Constants.AuditEventUpdateProduct,
+                    Details = $"Código: {p.Code} - Nombre: {p.Name} - Precio: {p.Price:C2}"
+                });
+                db.SaveChanges();
+                
+                // Registrar cambio de precio específico
+                if (precioCambio)
+                {
+                    db.Auditoria.Add(new AuditLog
+                    {
+                        UserId = Session.CurrentUser?.Id ?? 1,
+                        DateTime = DateTime.Now,
+                        Event = Constants.AuditEventPriceChange,
+                        Details = $"Código: {p.Code} - Nombre: {p.Name} - Precio anterior: {precioAnterior:C2} → Nuevo precio: {p.Price:C2}"
+                    });
+                    db.SaveChanges();
+                }
+            }
         }
 
         public static void DeleteByCodigo(string codigo)
         {
-            string sql = "DELETE FROM Productos WHERE Codigo=@Codigo";
-            Db.Execute(sql, new SqlParameter("@Codigo", codigo));
+            using var db = new MinimarketContext();
+            var producto = db.Productos.FirstOrDefault(p => p.Code == codigo);
+            if (producto != null)
+            {
+                var nombre = producto.Name;
+                db.Productos.Remove(producto);
+                db.SaveChanges();
+
+                // Registrar en auditoría
+                db.Auditoria.Add(new AuditLog
+                {
+                    UserId = Session.CurrentUser?.Id ?? 1,
+                    DateTime = DateTime.Now,
+                    Event = Constants.AuditEventDeleteProduct,
+                    Details = $"Código: {codigo} - Nombre: {nombre}"
+                });
+                db.SaveChanges();
+            }
         }
 
         public static void DescontarStock(int idProducto, int cantidad)
         {
-            string sql = "UPDATE Productos SET Stock = Stock - @cant WHERE IDProducto=@id";
-            Db.Execute(sql,
-                new SqlParameter("@cant", cantidad),
-                new SqlParameter("@id", idProducto));
+            using var db = new MinimarketContext();
+            var producto = db.Productos.FirstOrDefault(p => p.Id == idProducto);
+            if (producto != null)
+            {
+                producto.Stock -= cantidad;
+                db.SaveChanges();
+            }
+        }
+        
+        public static List<Minimarket.DTOs.ProductListDto> GetProductosBajoStock()
+        {
+            using var db = new MinimarketContext();
+            return db.Productos
+                .Where(p => p.IsActive && p.Stock <= p.MinStock)
+                .OrderBy(p => p.Stock)
+                .Select(p => new Minimarket.DTOs.ProductListDto
+                {
+                    Code = p.Code,
+                    Name = p.Name,
+                    Category = p.Category != null ? p.Category.Name : "",
+                    Cost = p.Cost,
+                    Price = p.Price,
+                    Stock = p.Stock,
+                    MinStock = p.MinStock,
+                    IsActive = p.IsActive
+                })
+                .ToList();
         }
     }
 }
