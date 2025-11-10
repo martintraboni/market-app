@@ -1,5 +1,6 @@
 using Models;
 using Minimarket.DTOs;
+using Microsoft.EntityFrameworkCore;
 
 namespace Minimarket.Data
 {
@@ -60,6 +61,14 @@ namespace Minimarket.Data
                 Details = $"Fecha: {cashClose.Date:dd/MM/yyyy} - Efectivo: {cashClose.CashInHand:C2} - Total Sistema: {cashClose.SystemTotal:C2} - Diferencia: {cashClose.Difference:C2}"
             });
             db.SaveChanges();
+        }
+        
+        public static CashClose? GetById(int id)
+        {
+            using var db = new MinimarketContext();
+            return db.CierresCaja
+                .Include(c => c.User)
+                .FirstOrDefault(c => c.Id == id);
         }
 
         public static decimal GetSaldoSistemaDia(DateTime fecha)

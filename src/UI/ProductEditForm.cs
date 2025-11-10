@@ -39,6 +39,11 @@ namespace Minimarket.UI
             Width = 400; Height = 400;
             try { this.Icon = new System.Drawing.Icon("taml.ico"); } catch { }
 
+            // Verificar permisos: User no puede cambiar precios
+            var usuario = Session.CurrentUser;
+            bool puedeEditarPrecio = usuario.Role.RoleCode == Constants.RoleCodeSupervisor || 
+                                     usuario.Role.RoleCode == Constants.RoleCodeAdmin;
+
             var layout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 7, AutoSize = true };
             layout.Controls.Add(new Label { Text = "Código" }, 0, 0); layout.Controls.Add(txtCodigo, 1, 0);
             layout.Controls.Add(new Label { Text = "Descripción" }, 0, 1); layout.Controls.Add(txtDescripcion, 1, 1);
@@ -66,6 +71,13 @@ namespace Minimarket.UI
             nudPrecio.Value = Producto.Price;
             nudStock.Value = Producto.Stock;
             nudStockMin.Value = Producto.MinStock;
+            
+            // Deshabilitar precio para usuarios sin permisos
+            nudPrecio.Enabled = puedeEditarPrecio;
+            if (!puedeEditarPrecio)
+            {
+                nudPrecio.BackColor = System.Drawing.Color.LightGray;
+            }
 
             btnOk.Click += (s, e) =>
             {

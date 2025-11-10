@@ -17,6 +17,10 @@ namespace Minimarket.UI
             Width = 900; Height = 500;
             try { this.Icon = new System.Drawing.Icon("taml.ico"); } catch { }
 
+            // Verificar permisos: ajustes manuales solo para Supervisor y Admin
+            var usuario = Session.CurrentUser;
+            bool puedeAjustarStock = usuario.Role.RoleCode == Constants.RoleCodeSupervisor || 
+                                     usuario.Role.RoleCode == Constants.RoleCodeAdmin;
 
             var top = new TableLayoutPanel
             {
@@ -59,6 +63,17 @@ namespace Minimarket.UI
 
             Controls.Add(grid);
             Controls.Add(top);
+            
+            // Deshabilitar controles de ajuste manual si no tiene permisos
+            if (!puedeAjustarStock)
+            {
+                btnAgregar.Enabled = false;
+                btnAgregar.Text = "Sin permisos para ajustes";
+                cmbProducto.Enabled = false;
+                cmbTipo.Enabled = false;
+                nudCantidad.Enabled = false;
+                txtMotivo.Enabled = false;
+            }
 
             Load += (s, e) => Cargar();
             btnAgregar.Click += (s, e) => Registrar();
@@ -116,6 +131,20 @@ namespace Minimarket.UI
                 prod.Stock = cantidad;
             
             db.SaveChanges();
+            
+            // Registrar ajuste manual en auditoría
+            if (tipo == Constants.InventoryMovementTypeAjuste)
+            {
+                db.Auditoria.Add(new AuditLog
+                {
+                    UserId = Session.CurrentUser?.Id ?? 1,
+                    DateTime = DateTime.Now,
+                    Event = Constants.AuditEventStockAdjustment,
+                    Details = $"Producto: {prod.Name} - Nuevo stock: {prod.Stock} - Motivo: {motivo}"
+                });
+                db.SaveChanges();
+            }
+            
             MessageBox.Show("Movimiento registrado correctamente");
             Cargar();
             nudCantidad.Value = 1;

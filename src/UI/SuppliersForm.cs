@@ -21,6 +21,11 @@ namespace Minimarket.UI
             Width = 700; Height = 400;
             try { this.Icon = new System.Drawing.Icon("taml.ico"); } catch { }
 
+            // Verificar permisos: solo Supervisor y Admin pueden gestionar proveedores
+            var usuario = Session.CurrentUser;
+            bool puedeGestionarProveedores = usuario.Role.RoleCode == Constants.RoleCodeSupervisor || 
+                                             usuario.Role.RoleCode == Constants.RoleCodeAdmin;
+
             var top = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true };
             top.Controls.AddRange(new Control[] { txtNombre, txtCUIT, txtTelefono, txtEmail, btnAgregar, btnEditar, btnEliminar });
 
@@ -35,6 +40,19 @@ namespace Minimarket.UI
 
             Controls.Add(grid);
             Controls.Add(top);
+            
+            // Deshabilitar edición si no tiene permisos
+            if (!puedeGestionarProveedores)
+            {
+                btnAgregar.Enabled = false;
+                btnEditar.Enabled = false;
+                btnEliminar.Enabled = false;
+                txtNombre.ReadOnly = true;
+                txtCUIT.ReadOnly = true;
+                txtTelefono.ReadOnly = true;
+                txtEmail.ReadOnly = true;
+                MessageBox.Show("No tiene permisos para gestionar proveedores. Solo visualización.", "Acceso restringido", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
 
             Load += (s, e) => Cargar();
             btnAgregar.Click += (s, e) => Agregar();

@@ -26,6 +26,7 @@ namespace Minimarket.Data
         {
             using var db = new MinimarketContext();
             return db.Ventas
+                .Include(v => v.User)
                 .Include(v => v.SaleItems)
                 .ThenInclude(si => si.Product)
                 .FirstOrDefault(v => v.Id == id);
@@ -118,6 +119,70 @@ namespace Minimarket.Data
                     Total = v.Total
                 })
                 .ToList();
+        }
+        
+        public static void AnularVenta(int ventaId, string motivo)
+        {
+            using var db = new MinimarketContext();
+            using var tx = db.Database.BeginTransaction();
+            try
+            {
+                var venta = db.Ventas
+                    .Include(v => v.SaleItems)
+                    .ThenInclude(si => si.Product)
+                    .FirstOrDefault(v => v.Id == ventaId);
+                    
+                if (venta == null)
+                    throw new Exception("Venta no encontrada");
+                
+                // Restaurar stock de cada producto
+                foreach (var item in venta.SaleItems)
+                {
+                    var producto = db.Productos.FirstOrDefault(p => p.Id == item.ProductId);
+                    if (producto != null)
+                    {
+                        producto.Stock += item.Qty;
+                        
+                        // Registrar movimiento de inventario (reversión)
+                        db.MovimientosInventario.Add(new InventoryMovement
+                        {
+                            ProductId = producto.Id,
+                            DateTime = DateTime.Now,
+                            Type = Constants.InventoryMovementTypeIngreso,
+                            Qty = item.Qty,
+                            Reason = $"Anulación venta N° {ventaId} - {motivo}",
+                            RefId = ventaId
+                        });
+                    }
+                }
+                
+                // Registrar movimiento de caja negativo (egreso por anulación)
+                db.MovimientosCaja.Add(new CashMovement
+                {
+                    DateTime = DateTime.Now,
+                    Type = Constants.CashMovementTypeOut,
+                    Amount = venta.Total,
+                    Concept = $"Anulación Venta N° {ventaId}",
+                    UserId = Session.CurrentUser?.Id ?? 1
+                });
+                
+                // Registrar en auditoría
+                db.Auditoria.Add(new AuditLog
+                {
+                    UserId = Session.CurrentUser?.Id ?? 1,
+                    DateTime = DateTime.Now,
+                    Event = Constants.AuditEventSaleCancellation,
+                    Details = $"Venta N° {ventaId} - Total: {venta.Total:C2} - Motivo: {motivo}"
+                });
+                
+                db.SaveChanges();
+                tx.Commit();
+            }
+            catch
+            {
+                tx.Rollback();
+                throw;
+            }
         }
     }
 }

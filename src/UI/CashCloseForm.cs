@@ -323,13 +323,46 @@ namespace Minimarket.UI
             };
 
             CashCloseRepository.Create(cierre);
-            MessageBox.Show($"Cierre registrado correctamente.\n\nResumen:\n" +
+            
+            // Generar PDF del acta de cierre
+            try
+            {
+                // Obtener el cierre completo con datos del usuario
+                var cierreCompleto = CashCloseRepository.GetById(cierre.Id);
+                if (cierreCompleto != null)
+                {
+                    var carpetaCierres = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Cierres");
+                    Directory.CreateDirectory(carpetaCierres);
+                    
+                    var rutaActa = Path.Combine(carpetaCierres, $"Cierre_{cierre.Date:yyyyMMdd}_{DateTime.Now:HHmmss}.pdf");
+                    Minimarket.Helpers.PdfHelper.GenerarActaCierre(cierreCompleto, rutaActa);
+                    
+                    var result = MessageBox.Show($"Cierre registrado correctamente.\n\nResumen:\n" +
                           $"• Total Sistema: {saldoSistema:C2}\n" +
                           $"• Efectivo contado: {efectivo:C2}\n" +
                           $"• Tarjeta: {pos:C2}\n" +
                           $"• QR: {qr:C2}\n" +
                           $"• Total contado: {(efectivo + pos + qr):C2}\n" +
-                          $"• Diferencia: {diferencia:C2}");
+                          $"• Diferencia: {diferencia:C2}\n\n" +
+                          $"¿Desea abrir el acta PDF?",
+                          "Cierre Exitoso", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+                    
+                    if (result == DialogResult.Yes)
+                    {
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = rutaActa,
+                            UseShellExecute = true
+                        });
+                    }
+                }
+            }
+            catch (Exception exPdf)
+            {
+                MessageBox.Show($"Cierre registrado pero no se pudo generar el PDF: {exPdf.Message}", 
+                    "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            
             Cargar();
             nudEfectivo.Value = 0;
             nudPOS.Value = 0;

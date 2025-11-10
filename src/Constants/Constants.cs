@@ -10,6 +10,7 @@
         public const string CashMovementTypeOut = "Egreso";
 
         public const string RoleCodeAdmin = "Admin";
+        public const string RoleCodeSupervisor = "Supervisor";
         public const string RoleCodeUser = "User";
 
         // Eventos de auditoría
@@ -23,5 +24,11 @@
         public const string AuditEventUpdateProduct = "Actualizar Producto";
         public const string AuditEventDeleteProduct = "Eliminar Producto";
         public const string AuditEventCashClose = "Cierre de Caja";
+        
+        // Eventos de auditoría avanzados (control de acceso y operaciones críticas)
+        public const string AuditEventPriceChange = "Cambio de Precio";
+        public const string AuditEventStockAdjustment = "Ajuste de Stock";
+        public const string AuditEventSaleCancellation = "Anulación de Venta";
+        public const string AuditEventAccessDenied = "Acceso Denegado";
     }
 }

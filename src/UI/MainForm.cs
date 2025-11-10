@@ -11,6 +11,11 @@ namespace Minimarket.UI
             Height = 700;
             try { this.Icon = new System.Drawing.Icon("taml.ico"); } catch { }
 
+            string roleCode = usuario.Role.RoleCode;
+            bool isAdmin = roleCode == Constants.RoleCodeAdmin;
+            bool isSupervisor = roleCode == Constants.RoleCodeSupervisor;
+            bool isUser = roleCode == Constants.RoleCodeUser;
+
             // Menú Productos
             var mProductos = new ToolStripMenuItem("Productos");
             var mGestionProductos = new ToolStripMenuItem("Gestión de Productos", null, (s, e) => new ProductsForm().ShowDialog());
@@ -23,6 +28,9 @@ namespace Minimarket.UI
             var mGestionCompras = new ToolStripMenuItem("Gestión de Compras", null, (s, e) => new PurchasesForm().ShowDialog());
             var mProveedores = new ToolStripMenuItem("Proveedores", null, (s, e) => new SuppliersForm().ShowDialog());
             mCompras.DropDownItems.AddRange(new ToolStripItem[] { mGestionCompras, mProveedores });
+            
+            // Proveedores solo para Supervisor y Admin
+            mProveedores.Enabled = isSupervisor || isAdmin;
 
             // Menú Ventas
             var mVentas = new ToolStripMenuItem("Ventas");
@@ -35,15 +43,21 @@ namespace Minimarket.UI
             var mMovCaja = new ToolStripMenuItem("Movimientos de Caja", null, (s, e) => new CashMovementsForm().ShowDialog());
             var mCierreCaja = new ToolStripMenuItem("Cierre de Caja", null, (s, e) => new CashCloseForm().ShowDialog());
             mCaja.DropDownItems.AddRange(new ToolStripItem[] { mMovCaja, mCierreCaja });
+            
+            // Movimientos y Cierre de Caja solo para Supervisor y Admin
+            mMovCaja.Enabled = isSupervisor || isAdmin;
+            mCierreCaja.Enabled = isSupervisor || isAdmin;
 
             // Menú Reportes
             var mReportes = new ToolStripMenuItem("Reportes");
             var mReporteVentas = new ToolStripMenuItem("Reporte de Ventas", null, (s, e) => new ReportsForm().ShowDialog());
-            mReportes.DropDownItems.Add(mReporteVentas);
+            var mReporteBajoStock = new ToolStripMenuItem("Productos con Bajo Stock", null, (s, e) => new LowStockReportForm().ShowDialog());
+            var mReportesAvanzados = new ToolStripMenuItem("Reportes Avanzados", null, (s, e) => new AdvancedReportsForm().ShowDialog());
+            mReportes.DropDownItems.AddRange(new ToolStripItem[] { mReporteVentas, mReporteBajoStock, mReportesAvanzados });
 
             // Menú Gestión Admin (solo visible para administradores)
             ToolStripMenuItem? mAdmin = null;
-            if (usuario.Role.RoleCode == Constants.RoleCodeAdmin)
+            if (isAdmin)
             {
                 mAdmin = new ToolStripMenuItem("Gestión Admin");
                 var mUsuarios = new ToolStripMenuItem("Usuarios", null, (s, e) => new UsersForm().ShowDialog());
@@ -74,6 +88,49 @@ namespace Minimarket.UI
             lblUsuario.Top = menu.Height + 5;
             lblUsuario.Left = Width - 250;
             Controls.Add(lblUsuario);
+            
+            // Panel de alertas de bajo stock
+            var panelAlertas = new Panel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 60,
+                BackColor = System.Drawing.Color.FromArgb(255, 243, 205),
+                BorderStyle = BorderStyle.FixedSingle,
+                Padding = new Padding(10)
+            };
+            
+            var lblAlerta = new Label
+            {
+                AutoSize = false,
+                Dock = DockStyle.Fill,
+                TextAlign = System.Drawing.ContentAlignment.MiddleLeft,
+                Font = new Font("Arial", 10, FontStyle.Regular),
+                ForeColor = System.Drawing.Color.DarkOrange
+            };
+            
+            var btnVerBajoStock = new Button
+            {
+                Text = "Ver Detalles →",
+                Dock = DockStyle.Right,
+                Width = 120,
+                BackColor = System.Drawing.Color.Orange,
+                ForeColor = System.Drawing.Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Cursor = Cursors.Hand
+            };
+            btnVerBajoStock.FlatAppearance.BorderSize = 0;
+            btnVerBajoStock.Click += (s, e) => new LowStockReportForm().ShowDialog();
+            
+            panelAlertas.Controls.Add(lblAlerta);
+            panelAlertas.Controls.Add(btnVerBajoStock);
+            
+            // Verificar productos con bajo stock
+            var productosBajoStock = Minimarket.Data.ProductRepository.GetProductosBajoStock();
+            if (productosBajoStock.Count > 0)
+            {
+                lblAlerta.Text = $"⚠️ ALERTA: {productosBajoStock.Count} producto(s) con stock bajo o agotado. Se recomienda realizar un pedido.";
+                Controls.Add(panelAlertas);
+            }
         }
     }
 }

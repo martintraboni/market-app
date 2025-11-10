@@ -72,12 +72,18 @@ namespace Minimarket.UI
         private Sale venta;
         private DataGridView grid = new DataGridView { Dock = DockStyle.Fill, ReadOnly = true, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill };
         private Label lblInfo = new Label { AutoSize = true, Font = new Font("Arial", 10, FontStyle.Regular) };
+        private Button btnAnular = new Button { Text = "Anular Venta", AutoSize = true };
 
         public SaleDetailForm(Sale venta)
         {
             this.venta = venta;
             Text = $"Detalle de Venta N° {venta.Id}";
             Width = 800; Height = 400;
+
+            // Verificar permisos para anular
+            var usuario = Session.CurrentUser;
+            bool puedeAnular = usuario.Role.RoleCode == Constants.RoleCodeSupervisor || 
+                              usuario.Role.RoleCode == Constants.RoleCodeAdmin;
 
             // Panel superior con información
             var topPanel = new FlowLayoutPanel
@@ -91,6 +97,14 @@ namespace Minimarket.UI
 
             lblInfo.Text = $"Fecha: {venta.DateTime:dd/MM/yyyy HH:mm}  |  Método de Pago: {venta.PaymentMethod}  |  Total: {venta.Total:C2}";
             topPanel.Controls.Add(lblInfo);
+            
+            // Botón anular solo si tiene permisos
+            if (puedeAnular)
+            {
+                btnAnular.Margin = new Padding(20, 0, 0, 0);
+                topPanel.Controls.Add(btnAnular);
+                btnAnular.Click += (s, e) => AnularVenta();
+            }
 
             // Configurar grid
             grid.AutoGenerateColumns = false;
@@ -117,6 +131,37 @@ namespace Minimarket.UI
                 x.UnitPrice,
                 x.Subtotal
             }).ToList();
+        }
+        
+        private void AnularVenta()
+        {
+            // Solicitar motivo de anulación
+            var motivo = Microsoft.VisualBasic.Interaction.InputBox(
+                "Ingrese el motivo de la anulación:",
+                "Anular Venta",
+                "",
+                -1, -1);
+                
+            if (string.IsNullOrWhiteSpace(motivo))
+            {
+                MessageBox.Show("Debe ingresar un motivo para anular la venta", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            
+            if (MessageBox.Show($"¿Está seguro que desea anular la venta N° {venta.Id}?\n\nEsta acción no se puede deshacer.",
+                "Confirmar Anulación", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                try
+                {
+                    SaleRepository.AnularVenta(venta.Id, motivo.Trim());
+                    MessageBox.Show("Venta anulada correctamente", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    Close();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error al anular venta: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
         }
     }
 }

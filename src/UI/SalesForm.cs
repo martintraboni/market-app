@@ -252,7 +252,51 @@ namespace Minimarket.UI
             try
             {
                 int id = SaleRepository.CrearVenta(venta);
-                MessageBox.Show($"Venta registrada. N° {id}");
+                
+                // Obtener la venta completa para generar ticket
+                var ventaCompleta = SaleRepository.GetByIdWithItems(id);
+                if (ventaCompleta != null)
+                {
+                    try
+                    {
+                        // Crear carpeta Tickets si no existe
+                        var carpetaTickets = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Tickets");
+                        Directory.CreateDirectory(carpetaTickets);
+                        
+                        var rutaTicket = Path.Combine(carpetaTickets, $"Ticket_{id}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
+                        Minimarket.Helpers.PdfHelper.GenerarTicketVenta(ventaCompleta, rutaTicket);
+                        
+                        var result = MessageBox.Show($"Venta registrada exitosamente.\nN° de operación: {id}\n\n¿Desea abrir el ticket PDF?", 
+                            "Venta Exitosa", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+                        
+                        if (result == DialogResult.Yes)
+                        {
+                            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                            {
+                                FileName = rutaTicket,
+                                UseShellExecute = true
+                            });
+                        }
+                    }
+                    catch (Exception exPdf)
+                    {
+                        // Mostrar error detallado con stack trace
+                        var errorMsg = $"Venta registrada (N° {id}) pero no se pudo generar el ticket.\n\n" +
+                                      $"Error: {exPdf.Message}\n\n" +
+                                      $"Tipo: {exPdf.GetType().Name}\n\n";
+                        
+                        if (exPdf.InnerException != null)
+                        {
+                            errorMsg += $"Error interno: {exPdf.InnerException.Message}\n\n";
+                        }
+                        
+                        errorMsg += $"StackTrace:\n{exPdf.StackTrace}";
+                        
+                        MessageBox.Show(errorMsg, "Error al generar PDF", 
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                }
+                
                 this.Close();
             }
             catch (Exception ex)

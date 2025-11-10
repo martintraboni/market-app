@@ -79,6 +79,9 @@ namespace Minimarket.Data
             var existing = db.Productos.FirstOrDefault(x => x.Code == p.Code);
             if (existing != null)
             {
+                bool precioCambio = existing.Price != p.Price;
+                decimal precioAnterior = existing.Price;
+                
                 existing.Name = p.Name;
                 existing.CategoryId = p.CategoryId;
                 existing.Price = p.Price;
@@ -95,6 +98,19 @@ namespace Minimarket.Data
                     Details = $"Código: {p.Code} - Nombre: {p.Name} - Precio: {p.Price:C2}"
                 });
                 db.SaveChanges();
+                
+                // Registrar cambio de precio específico
+                if (precioCambio)
+                {
+                    db.Auditoria.Add(new AuditLog
+                    {
+                        UserId = Session.CurrentUser?.Id ?? 1,
+                        DateTime = DateTime.Now,
+                        Event = Constants.AuditEventPriceChange,
+                        Details = $"Código: {p.Code} - Nombre: {p.Name} - Precio anterior: {precioAnterior:C2} → Nuevo precio: {p.Price:C2}"
+                    });
+                    db.SaveChanges();
+                }
             }
         }
 
@@ -129,6 +145,26 @@ namespace Minimarket.Data
                 producto.Stock -= cantidad;
                 db.SaveChanges();
             }
+        }
+        
+        public static List<Minimarket.DTOs.ProductListDto> GetProductosBajoStock()
+        {
+            using var db = new MinimarketContext();
+            return db.Productos
+                .Where(p => p.IsActive && p.Stock <= p.MinStock)
+                .OrderBy(p => p.Stock)
+                .Select(p => new Minimarket.DTOs.ProductListDto
+                {
+                    Code = p.Code,
+                    Name = p.Name,
+                    Category = p.Category != null ? p.Category.Name : "",
+                    Cost = p.Cost,
+                    Price = p.Price,
+                    Stock = p.Stock,
+                    MinStock = p.MinStock,
+                    IsActive = p.IsActive
+                })
+                .ToList();
         }
     }
 }
