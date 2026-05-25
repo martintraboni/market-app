@@ -3,8 +3,6 @@
 Sistema de gestión para minimarket desarrollado en C# (.NET 8, WinForms).
 
 
-Sistema de gestión para minimarket desarrollado en C# (.NET 8, WinForms).
-
 ## Requisitos
 
 - **Windows 10/11**
