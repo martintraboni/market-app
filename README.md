@@ -1,4 +1,7 @@
-# Minimarket-PPV-2025
+# Market App
+
+Sistema de gestión para minimarket desarrollado en C# (.NET 8, WinForms).
+
 
 Sistema de gestión para minimarket desarrollado en C# (.NET 8, WinForms).
 
@@ -14,7 +17,7 @@ Sistema de gestión para minimarket desarrollado en C# (.NET 8, WinForms).
 
 1. **Clona el repositorio:**
    ```
-   git clone https://github.com/CrowMT/Minimarket-PPV-2025.git
+   git clone https://github.com/martintraboni/market-app.git
    ```
 
 2. **Prepara la base de datos:**
